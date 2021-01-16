@@ -1,0 +1,198 @@
+---
+title: "データの可視化（棒グラフ）"
+date: "`r Sys.Date()`"
+author: Sort
+output:
+  rmdformats::readthedown:
+    highlight: kate
+    self_contained: true
+---
+
+```{css, echo=FALSE}
+#content {
+    max-width: 100%;
+}
+```
+
+```{r, include=FALSE}
+library(rmdformats)
+
+knitr::opts_chunk$set(warning = F,
+                      message = F,
+                      comment = "",
+                      fig.align = "center",
+                      out.width = 800,
+                      out.height = 300)
+```
+
+# 使用するパッケージ
+
+```{r}
+library(tidyverse)
+library(magrittr)
+library(stargazer)
+```
+
+# ggplot2 の theme をあらかじめ設定しておく
+
+```{r}
+theme_set(theme_minimal(base_size = 15))
+```
+
+# データの読み込み
+
+```{r}
+data <- read_csv("Data/House_of_Councilors_1996_2017.csv") %>% as.data.frame() # 1996 年～2017 年までの参院選データ
+
+data_2017 <- data %>% filter(year == 2017)                                     # 2017 年の参院選のデータを抽出
+```
+
+# データの記述統計
+
+```{r}
+stargazer(data = data_2017,
+          digits = 2,
+          type = "text")                                                  
+# "text", "html", "latex" が選べる。"html"を選んだらチャンクオプションで result='asis' を指定
+```
+
+# 棒グラフ
+
+```{r}
+# 使用するデータの準備
+data_2017_a <- data_2017 %>% 
+  filter(party_jpn %in% c("自民党", "希望", "共産党")) %>%                # 自民党、希望、共産党を抽出
+  group_by(party_jpn) %>%                                                 # 各政党毎に処理を行う
+  summarise(voteshare = mean(voteshare))                                  # 各政党の平均得票率を計算
+```  
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = party_jpn, y = voteshare)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y = "得票率")
+```
+
+## 棒グラフに y の値のラベルを付ける
+
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = party_jpn, y = voteshare)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),      # 棒グラフに得票率のラベルを付ける
+             size = 8,                                                    # ラベルのサイズ
+             position = position_stack(vjust = 0.5))                      # ラベルの位置
+# paste() を併用することで数字の後に % を付けることができる
+```
+
+### y が大きい順に x を並べる
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                    # fct_reorder(x, y, .desc = T)で y が大きい順に ｘ を並び変える
+             y = voteshare)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5))                            
+```
+
+## 特定の棒の色を変える
+
+```{r}
+# 色を変える対象を 1 とするダミー変数を作成する
+data_2017_a %<>% mutate(ldp = if_else(party_jpn == "自民党", 1, 0))
+```
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +         # ldp の値で色を変える。show.legend = F で legend を非表示に
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
+             color = "black",                                                     # ラベルの枠の色
+             fill = "white") +                                                    # ラベルの背景の色
+  scale_fill_manual(values = c("grey","red"))                                     # ldp = 1 : red, ldp = 0 : grey で棒グラフを塗る
+```
+
+# 描画範囲の設定
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) + 
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),
+             size = 8,
+             position = position_stack(vjust = 0.5),
+             color = "black",
+             fill = "white") +
+  scale_fill_manual(values = c("grey","red")) +
+  coord_trans(ylim = c(0, 100))                                                   # y を 0 ～ 100 まで表示する
+```
+
+## 棒グラフを回転する
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
+             color = "black",                                                   
+             fill = "white") +                                                  
+  scale_fill_manual(values = c("grey","red")) + 
+  coord_flip(ylim = c(0, 100))                                    # coord_flip()で図形を回転させる。ylim を設定することで描画範囲を設定可能
+```
+
+## メモリ（x）の操作(カテゴリカル)
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
+             color = "black",                                                   
+             fill = "white") +                                                  
+  scale_fill_manual(values = c("grey","red")) + 
+  coord_flip(ylim = c(0, 100)) +
+  scale_x_discrete(labels = c("自民党" = "自民党\n(現存)",  # 自民党を自民党\n(現存)に
+                              "希望" = "希望の党\n(消失)",  # 希望を希望の党\n(消失)に
+                              "共産党" = "共産党\n(現存)")) # 共産党を共産党\n(現存)に
+```
+
+# メモリ（y）の操作(数量)
+
+```{r}
+data_2017_a %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
+  labs(x = "", y = "得票率") +
+  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
+             color = "black",                                                   
+             fill = "white") +                                                  
+  scale_fill_manual(values = c("grey","red")) + 
+  coord_flip(ylim = c(0, 100)) +
+  scale_x_discrete(labels = c("自民党" = "自民党\n(現存)",  
+                              "希望" = "希望の党\n(消失)",  
+                              "共産党" = "共産党\n(現存)")) +
+  scale_y_continuous(breaks = seq(0, 100, length = 11))  #  y 軸のメモリを 0 ～ 100 までにし、11 本のメモリ線を引く
+```
+
