@@ -20,9 +20,7 @@ library(rmdformats)
 knitr::opts_chunk$set(warning = F,
                       message = F,
                       comment = "",
-                      fig.align = "center",
-                      out.width = 800,
-                      out.height = 300)
+                      fig.align = "center")
 ```
 
 # 使用するパッケージ
@@ -34,161 +32,205 @@ library(magrittr)
 
 # ggplot2 の theme をあらかじめ設定しておく
 
+最初からthemeを設定しておくと。これがかなり大事だ。（当たり前体操）
+おすすめは**theme_minimal()**だ。単純にこれが一番見やすい。（n=1）
+
 ```{r}
 theme_set(theme_minimal(base_size = 15))
 ```
 
 # データの読み込み
 
-```{r}
-data <- read_csv("Data/House_of_Councilors_1996_2017.csv") %>% as.data.frame() # 1996 年～2017 年までの参院選データ
+今回使用するのは参院選に出馬した各候補者のデータだ。
+1996年から2017年までのデータが詰まっている。
 
-data_2017 <- data %>% filter(year == 2017)                                     # 2017 年の参院選のデータを抽出
+```{r}
+data <- read_csv("Data/House_of_Councilors_1996_2017.csv") # 1996年～2017年までの参院選データ
 ```
 
-# 変数名
+# データ内の変数名を確認する
+
+どんな変数があるか見てみよう。
 
 ```{r}
-names(data_2017)
+names(data)
+```
+
+# 今回使用したい形に変形
+
+今回は棒グラフの回なので、棒グラフで使いやすい形にする。
+また、2017年の参院選にデータを絞る。
+
+```{r}
+data_2017 <- data %>% 
+  group_by(year, party_jpn) %>% # 各政党毎に処理を行う
+  summarise(voteshare = mean(voteshare)) %>%  # 各政党の平均得票率(候補者)を計算
+  filter(party_jpn %in% c("自民党", "公明党", "社民党", "共産党")) %>% # 政党を絞る
+  filter(year == 2017) # 2017年のデータに絞る
 ```
 
 # 棒グラフ
 
-```{r}
-# 使用するデータの準備
-data_2017_a <- data_2017 %>% 
-  filter(party_jpn %in% c("自民党", "希望", "共産党")) %>%                # 自民党、希望、共産党を抽出
-  group_by(party_jpn) %>%                                                 # 各政党毎に処理を行う
-  summarise(voteshare = mean(voteshare))                                  # 各政党の平均得票率を計算
-```  
+## なんの変哲もない棒グラフ
 
 ```{r}
-data_2017_a %>% 
+data_2017 %>% 
   ggplot(aes(x = party_jpn, y = voteshare)) +
   geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率")
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率")
+```
+
+## y が大きい順に x を並べる
+
+より見やすい棒グラフを作るのに、大きい順や小さい順に並び変えることは非常に有効だ。
+
+```{r}
+data_2017 %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T), # fct_reorder(x, y, .desc = T)でyが大きい順にxを並び変える
+             y = voteshare)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") 
 ```
 
 ## 棒グラフに y の値のラベルを付ける
 
+大きい順や小さい順に並び変えても細かい数値が読み取れるわけではない。
+そのため、ラベルを付けるとより見やすい棒グラフになる。
+また、**paste()**を使うと数値の後に%とかを付けれる。
 
 ```{r}
-data_2017_a %>% 
-  ggplot(aes(x = party_jpn, y = voteshare)) +
-  geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),      # 棒グラフに得票率のラベルを付ける
-             size = 8,                                                    # ラベルのサイズ
-             position = position_stack(vjust = 0.5))                      # ラベルの位置
-# paste() を併用することで数字の後に % を付けることができる
-```
-
-### y が大きい順に x を並べる
-
-```{r}
-data_2017_a %>% 
-  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                    # fct_reorder(x, y, .desc = T)で y が大きい順に ｘ を並び変える
+data_2017 %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),
              y = voteshare)) +
   geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
-             size = 8,                                                          
-             position = position_stack(vjust = 0.5))                            
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")), # 棒グラフに得票率のラベルを付ける
+             position = position_stack(vjust = 0.5), # ラベルの位置 
+             size = 8) # ラベルのサイズ
 ```
 
 ## 特定の棒の色を変える
 
-```{r}
-# 色を変える対象を 1 とするダミー変数を作成する
-data_2017_a %<>% mutate(ldp = if_else(party_jpn == "自民党", 1, 0))
-```
+図の中に、視線を集中させたい棒がある場合は色を活用しよう。
+有彩色と無彩色で色分けをすると、有彩色で棒を強調することができる。
+まずは、注目させたいものを1、それ以外を0とするダミー変数を作成する。
 
 ```{r}
-data_2017_a %>% 
+# 色を変える対象を1とするダミー変数を作成する
+data_2017 %<>% mutate(ldp = if_else(party_jpn == "自民党", 1, 0))
+```
+
+今回は赤とグレーで色分けしてみた。
+**scale_fill_manual()**で自由に色を選べる。
+ただ、勝手にラベルの色も変わるので、**geom_label()**に追加で設定が必要となる。
+
+```{r}
+data_2017 %>% 
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
-             y = voteshare)) +
-  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +         # ldp の値で色を変える。show.legend = F で legend を非表示に
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+             y = voteshare,
+             fill = factor(ldp))) + # ldpの値で色を変える。
+  geom_bar(stat = "identity", show.legend = F) + # show.legend = Fでlegendを非表示に
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
-             color = "black",                                                     # ラベルの枠の色
-             fill = "white") +                                                    # ラベルの背景の色
-  scale_fill_manual(values = c("grey","red"))                                     # ldp = 1 : red, ldp = 0 : grey で棒グラフを塗る
+             color = "black", # ラベルの枠の色
+             fill = "white") + # ラベルの背景の色
+  scale_fill_manual(values = c("grey","red")) # ldp = 1はred、 ldp = 0はgreyで棒グラフを塗る
 ```
 
-# 描画範囲の設定
+## 描画範囲の設定
+
+使用している数値が大きいのか小さいのかは相対的なものである。
+絶対的にその数値が大きいのか小さいのかは、メモリを調整することでわかりやすくできる。
+特にパーセンテージで表わされるデータを使用している場合は、0～100までメモリを表示したほうがみやすいこともある。
 
 ```{r}
-data_2017_a %>% 
+data_2017 %>% 
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
-             y = voteshare)) +
-  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) + 
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),
-             size = 8,
-             position = position_stack(vjust = 0.5),
+             y = voteshare,
+             fill = factor(ldp))) +
+  geom_bar(stat = "identity", show.legend = F) + 
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
              color = "black",
              fill = "white") +
-  scale_fill_manual(values = c("grey","red")) +
-  coord_trans(ylim = c(0, 100))                                                   # y を 0 ～ 100 まで表示する
-```
-
-## 棒グラフを回転する
-
-```{r}
-data_2017_a %>% 
-  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
-             y = voteshare)) +
-  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
-             size = 8,                                                          
-             position = position_stack(vjust = 0.5),                            
-             color = "black",                                                   
-             fill = "white") +                                                  
   scale_fill_manual(values = c("grey","red")) + 
-  coord_flip(ylim = c(0, 100))                                    # coord_flip()で図形を回転させる。ylim を設定することで描画範囲を設定可能
+  coord_trans(ylim = c(0, 100)) # y軸を0～100まで表示する
 ```
 
 ## メモリ（x）の操作(カテゴリカル)
 
+xがカテゴリカル変数の場合、このような工夫で図を分かりやすくできる。
+今回は適当にやってますが、通常ではnがどのくらいかを表示したりする。
+
 ```{r}
-data_2017_a %>% 
+data_2017 %>% 
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
              y = voteshare)) +
   geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
              color = "black",                                                   
              fill = "white") +                                                  
   scale_fill_manual(values = c("grey","red")) + 
-  coord_flip(ylim = c(0, 100)) +
-  scale_x_discrete(labels = c("自民党" = "自民党\n(現存)",  # 自民党を自民党\n(現存)に
-                              "希望" = "希望の党\n(消失)",  # 希望を希望の党\n(消失)に
+  coord_trans(ylim = c(0, 100)) +
+  scale_x_discrete(labels = c("公明党" = "公明党\n(現存)", # 公明党を公明党\n(現存)に
+                              "自民党" = "自民党\n(現存)", # 自民党を自民党\n(現存)に
+                              "社民党" = "社民党\n(消失)", # 希望を希望の党\n(消失)に
                               "共産党" = "共産党\n(現存)")) # 共産党を共産党\n(現存)に
 ```
 
-# メモリ（y）の操作(数量)
+## メモリ（y）の操作(数量)
+
+メモリの刻みを増やしたり、メモリの範囲を制限したりできる。
+あくまでもメモリの調整なので、xlimやylimとは別物だ。
 
 ```{r}
-data_2017_a %>% 
+data_2017 %>% 
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
              y = voteshare)) +
   geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率") +
-  geom_label(aes(label = paste(round(data_2017_a$voteshare, 1), "%", sep = "")),                                  
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
              color = "black",                                                   
              fill = "white") +                                                  
   scale_fill_manual(values = c("grey","red")) + 
-  coord_flip(ylim = c(0, 100)) +
-  scale_x_discrete(labels = c("自民党" = "自民党\n(現存)",  
-                              "希望" = "希望の党\n(消失)",  
+  coord_trans(ylim = c(0, 100)) +
+  scale_x_discrete(labels = c("公明党" = "公明党\n(現存)",
+                              "自民党" = "自民党\n(現存)",
+                              "社民党" = "社民党\n(消失)",  
                               "共産党" = "共産党\n(現存)")) +
-  scale_y_continuous(breaks = seq(0, 100, length = 11))  #  y 軸のメモリを 0 ～ 100 までにし、11 本のメモリ線を引く
+  scale_y_continuous(breaks = seq(0, 100, length = 11)) #  y軸のメモリを0～100までにし、11本のメモリ線を引く
 ```
 
+## 棒グラフを回転する
+
+xが増えると文字が重なって見えにくくなる。文字の角度を変えてもいいが、視認性が低下する。
+そのため、グラフを回転することをおすすめする。
+
+```{r}
+data_2017 %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
+             y = voteshare)) +
+  geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
+             size = 8,                                                          
+             position = position_stack(vjust = 0.5),                            
+             color = "black",                                                   
+             fill = "white") +                                                  
+  scale_fill_manual(values = c("grey","red")) + 
+  scale_x_discrete(labels = c("公明党" = "公明党\n(現存)",
+                              "自民党" = "自民党\n(現存)",
+                              "社民党" = "社民党\n(消失)",  
+                              "共産党" = "共産党\n(現存)")) +
+  scale_y_continuous(breaks = seq(0, 100, length = 11)) + 
+  coord_flip(ylim = c(0, 100)) # coord_flip()で図形を回転させる。ylimを設定することで描画範囲を設定可能（その場合、coord_trans()は消す）
+```
