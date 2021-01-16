@@ -30,7 +30,6 @@ knitr::opts_chunk$set(warning = F,
 ```{r}
 library(tidyverse)
 library(magrittr)
-library(stargazer)
 ```
 
 # ggplot2 の theme をあらかじめ設定しておく
@@ -47,13 +46,10 @@ data <- read_csv("Data/House_of_Councilors_1996_2017.csv") %>% as.data.frame() #
 data_2017 <- data %>% filter(year == 2017)                                     # 2017 年の参院選のデータを抽出
 ```
 
-# データの記述統計
+# 変数名
 
 ```{r}
-stargazer(data = data_2017,
-          digits = 2,
-          type = "text")                                                  
-# "text", "html", "latex" が選べる。"html"を選んだらチャンクオプションで result='asis' を指定
+names(data_2017)
 ```
 
 # 棒グラフ
