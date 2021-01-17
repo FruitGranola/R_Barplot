@@ -41,11 +41,11 @@ theme_set(theme_minimal(base_size = 15))
 
 # データの読み込み
 
-今回使用するのは参院選に出馬した各候補者のデータだ。
+今回使用するのは衆院選に出馬した各候補者のデータだ。
 1996年から2017年までのデータが詰まっている。
 
 ```{r}
-data <- read_csv("Data/House_of_Councilors_1996_2017.csv") # 1996年～2017年までの参院選データ
+data <- read_csv("Data/House_of_Councilors_1996_2017.csv") # 1996年～2017年までの衆院選データ
 ```
 
 # データ内の変数名を確認する
@@ -59,7 +59,7 @@ names(data)
 # 今回使用したい形に変形
 
 今回は棒グラフの回なので、棒グラフで使いやすい形にする。
-また、2017年の参院選にデータを絞る。
+また、2017年の衆院選にデータを絞る。
 
 ```{r}
 data %<>% 
@@ -78,7 +78,7 @@ data_2017 <- data %>% filter(year == 2017) # 2017年のデータに絞る
 data_2017 %>% 
   ggplot(aes(x = party_jpn, y = voteshare)) +
   geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率")
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率")
 ```
 
 ## y が大きい順に x を並べる
@@ -90,7 +90,7 @@ data_2017 %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T), # fct_reorder(x, y, .desc = T)でyが大きい順にxを並び変える
              y = voteshare)) +
   geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") 
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") 
 ```
 
 ## 棒グラフに y の値のラベルを付ける
@@ -104,7 +104,7 @@ data_2017 %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),
              y = voteshare)) +
   geom_bar(stat = "identity") +
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")), # 棒グラフに得票率のラベルを付ける
              position = position_stack(vjust = 0.5), # ラベルの位置 
              size = 8) # ラベルのサイズ
@@ -131,7 +131,7 @@ data_2017 %>%
              y = voteshare,
              fill = factor(ldp))) + # ldpの値で色を変える。
   geom_bar(stat = "identity", show.legend = F) + # show.legend = Fでlegendを非表示に
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
@@ -152,7 +152,7 @@ data_2017 %>%
              y = voteshare,
              fill = factor(ldp))) +
   geom_bar(stat = "identity", show.legend = F) + 
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
@@ -172,7 +172,7 @@ data_2017 %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
              y = voteshare)) +
   geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
@@ -196,7 +196,7 @@ data_2017 %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
              y = voteshare)) +
   geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
@@ -221,7 +221,7 @@ data_2017 %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),                  
              y = voteshare)) +
   geom_bar(aes(fill = factor(ldp)), stat = "identity", show.legend = F) +       
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")),                                  
              size = 8,                                                          
              position = position_stack(vjust = 0.5),                            
@@ -245,7 +245,7 @@ data %>%
   ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),
              y = voteshare)) +
   geom_bar(aes(fill = party_jpn), stat = "identity") +
-  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "", y = "得票率", title = "2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")), 
              position = position_stack(vjust = 0.5),
              size = 3) + 
@@ -264,7 +264,7 @@ data %>%
   ggplot(aes(x = fct_reorder(as.factor(year), voteshare, .desc = F),
              y = voteshare)) +
   geom_bar(aes(fill = party_jpn), stat = "identity") +
-  labs(x = "実施年", y = "得票率", title = "1996～2017年参院選: 各政党の候補者の平均得票率") +
+  labs(x = "実施年", y = "得票率", title = "1996～2017年衆院選: 各政党の候補者の平均得票率") +
   geom_label(aes(label = paste(round(voteshare, 1), "%", sep = ""), group = party_jpn),
              size = 3,
              position = position_stack(vjust = 0.5)) +
