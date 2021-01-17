@@ -62,11 +62,12 @@ names(data)
 また、2017年の参院選にデータを絞る。
 
 ```{r}
-data_2017 <- data %>% 
+data %<>% 
   group_by(year, party_jpn) %>% # 各政党毎に処理を行う
   summarise(voteshare = mean(voteshare)) %>%  # 各政党の平均得票率(候補者)を計算
-  filter(party_jpn %in% c("自民党", "公明党", "社民党", "共産党")) %>% # 政党を絞る
-  filter(year == 2017) # 2017年のデータに絞る
+  filter(party_jpn %in% c("自民党", "公明党", "社民党", "共産党")) # 政党を絞る
+  
+data_2017 <- data %>% filter(year == 2017) # 2017年のデータに絞る
 ```
 
 # 棒グラフ
@@ -234,3 +235,39 @@ data_2017 %>%
   scale_y_continuous(breaks = seq(0, 100, length = 11)) + 
   coord_flip(ylim = c(0, 100)) # coord_flip()で図形を回転させる。ylimを設定することで描画範囲を設定可能（その場合、coord_trans()は消す）
 ```
+
+## 実施年毎の棒グラフ
+
+**facet_wrap()**を使用するときは**theme_bw()**のほうが視認性が高いと思っているため、勝手に推奨してます。
+
+```{r}
+data %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, voteshare, .desc = T),
+             y = voteshare)) +
+  geom_bar(aes(fill = party_jpn), stat = "identity") +
+  labs(x = "", y = "得票率", title = "2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = "")), 
+             position = position_stack(vjust = 0.5),
+             size = 3) + 
+  theme_bw(base_size = 15) +
+  theme(legend.position = c(.85, .09), legend.title = element_blank()) +
+  facet_wrap(~ year) 
+```
+
+## 積み上げ棒グラフ
+
+正直、積み上げ棒グラフより線グラフの方が視認性が高いよね。  
+使用は非推奨です。
+
+```{r}
+data %>% 
+  ggplot(aes(x = fct_reorder(as.factor(year), voteshare, .desc = F),
+             y = voteshare)) +
+  geom_bar(aes(fill = party_jpn), stat = "identity") +
+  labs(x = "実施年", y = "得票率", title = "1996～2017年参院選: 各政党の候補者の平均得票率") +
+  geom_label(aes(label = paste(round(voteshare, 1), "%", sep = ""), group = party_jpn),
+             size = 3,
+             position = position_stack(vjust = 0.5)) +
+  theme(legend.position = c(.06, .8), legend.title = element_blank())
+```
+
