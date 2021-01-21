@@ -23,6 +23,8 @@ knitr::opts_chunk$set(warning = F,
                       fig.align = "center")
 ```
 
+この記事のコードをまとめたものは[Github](https://github.com/FruitGranola?tab=repositories)にあります。
+
 # 使用するパッケージ
 
 ```{r}
@@ -33,7 +35,7 @@ library(magrittr)
 # ggplot2 の theme をあらかじめ設定しておく
 
 最初からthemeを設定しておく。これがかなり大事だ。（当たり前体操）
-おすすめは**theme_minimal()**だ。シンプルで、これが一番見やすい。（n=1）
+おすすめは`theme_minimal()`だ。シンプルで、これが一番見やすい。（n=1）
 
 ```{r}
 theme_set(theme_minimal(base_size = 15))
@@ -97,7 +99,7 @@ data_2005 %>%
 
 大きい順や小さい順に並び変えても細かい数値が読み取れるわけではない。
 そのため、ラベルを付けるとより見やすい棒グラフになる。
-また、**paste()**を使うと数値の後に単位を付けられる。
+また、`paste()`を使うと数値の後に単位を付けられる。
 
 ```{r}
 data_2005 %>% 
@@ -122,8 +124,8 @@ data_2005 %<>% mutate(ldp = if_else(party_jpn == "自民党", 1, 0))
 ```
 
 今回は赤とグレーで色分けしてみた。
-**scale_fill_manual()**で自由に色を選べる。
-ただ、勝手にラベルの色も変わるので、**geom_label()**に追加で設定が必要となる。
+`scale_fill_manual()`で自由に色を選べる。
+ただ、勝手にラベルの色も変わるので、`geom_label()`に追加で設定が必要となる。
 
 ```{r}
 data_2005 %>% 
@@ -139,6 +141,24 @@ data_2005 %>%
              fill = "white") + # ラベルの背景の色
   scale_fill_manual(values = c("grey","red")) # ldp = 1はred、 ldp = 0はgreyで棒グラフを塗る
 ```
+
+# gghighlightを使った場合
+
+簡単に図形の強調をするパッケージとして`gghighlight`がある。
+ただ、`geom_label()`で数値のラベルを付けたいときには相性が悪い。
+相手に見せる資料には上のやり方が良いだろう。
+
+```{r}
+library(gghighlight)
+data_2005 %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, smd, .desc = T),                  
+             y = smd,
+             fill = party_jpn)) + # ldpの値で色を変える。
+  geom_bar(stat = "identity", show.legend = F) + # show.legend = Fでlegendを非表示に
+  labs(x = "", y = "当選者数", title = "2005年衆院選: 各政党の当選者数") +
+  gghighlight(party_jpn %in% c("自民党")) 
+```
+
 
 ## 描画範囲の設定
 
@@ -184,7 +204,7 @@ data_2005 %>%
 ## メモリ（y）の操作(数量)
 
 メモリの刻みを増やしたり、メモリの範囲を制限したりできる。
-あくまでもメモリの調整なので、xlimやylimとは別物だ。
+あくまでもメモリの調整なので、`xlim()`や`ylim()`とは別物だ。
 
 ```{r}
 data_2005 %>% 
@@ -230,7 +250,7 @@ data_2005 %>%
 
 ## 実施年毎の棒グラフ
 
-**facet_wrap()**を使用するときは**theme_bw()**のほうが視認性が高いと思っているため、勝手に推奨してます。
+`facet_wrap()`を使用するときは`theme_bw()`のほうが視認性が高いと思っているため、勝手に推奨してます。
 ただ、時系列データのようなものは、素直に折れ線グラフを使ったほうが見やすい。
 
 ```{r}
