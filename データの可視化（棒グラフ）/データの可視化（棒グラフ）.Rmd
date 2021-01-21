@@ -2,21 +2,10 @@
 title: "データの可視化（棒グラフ）"
 date: "`r Sys.Date()`"
 author: Sort
-output:
-  rmdformats::readthedown:
-    highlight: kate
-    self_contained: true
+output: html_document
 ---
 
-```{css, echo=FALSE}
-#content {
-    max-width: 100%;
-}
-```
-
 ```{r, include=FALSE}
-library(rmdformats)
-
 knitr::opts_chunk$set(warning = F,
                       message = F,
                       comment = "",
