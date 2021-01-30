@@ -12,7 +12,7 @@ knitr::opts_chunk$set(warning = F,
                       fig.align = "center")
 ```
 
-この記事のコードをまとめたものは[Github](https://github.com/FruitGranola?tab=repositories)にあります。
+この記事のコードをまとめたものは[Github](https://github.com/FruitGranola/R_Barplot)にあります。
 
 # 使用するパッケージ
 
@@ -82,6 +82,22 @@ data_2005 %>%
              y = smd)) +
   geom_bar(stat = "identity") +
   labs(x = "", y = "当選者数", title = "2005年衆院選: 各政党の当選者数") 
+```
+
+## 枠線と棒の中身の色を設定する
+
+こうすると、すこしポップになった気がする。（私だけ?）
+
+```{r}
+data_2005 %>% 
+  ggplot(aes(x = fct_reorder(party_jpn, # fct_reorder(x, y, .desc = T)でyが大きい順にxを並び変える
+                             smd, 
+                             .desc = T), 
+             y = smd)) +
+  geom_bar(stat = "identity", color = "black", fill = "orange") +
+  labs(x = NULL, 
+       y = "当選者数",
+       title = "2005年衆院選: 各政党の当選者数") 
 ```
 
 ## 棒グラフに y の値のラベルを付ける
