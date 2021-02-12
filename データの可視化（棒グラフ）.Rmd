@@ -7,14 +7,6 @@ output: html_document
 
 # 棒グラフの描き方
 
-<HR>
-
-最終更新日: `r Sys.time()`
-
-<button>[Homeに戻る](index.html)</button>
-
-<HR>
-
 ```{r}
 knitr::opts_chunk$set(warning = F,
                       message = F,
@@ -386,4 +378,4 @@ data %>%
 
 この記事のコードをまとめたものは[Github](https://github.com/FruitGranola/R_Barplot)にあります。
 
-<button>[Homeに戻る](index.html)</button>
+<HR>
